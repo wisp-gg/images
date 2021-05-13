@@ -125,7 +125,7 @@ def main():
         with zipfile.ZipFile(jar, "r") as zip:
             name = getJavaName(zip)
 
-            if not os.path.exists(state_file) or readFile(state_file).strip() != checksum:
+            if not os.path.exists(state_file) or readFile(state_file) != checksum:
                 if not is_echo:
                     raise Exception("Something went really wrong - prompt should be displayed in echo mode but we're not using that mode???")
 
@@ -138,7 +138,7 @@ def main():
                         initial = False
                         print("Which java version do you want to use?")
                     else:
-                        print("Invalid option '%s' - the only valid options are the following:" % answer)
+                        print("Invalid option '%s' - the only valid options are the following:" % str(answer))
 
                     print("1) Automatically detected version: '%s'" % name)
                     print("2) Java 8")
@@ -156,9 +156,8 @@ def main():
 
                     if answer.isdigit():
                         answer = int(answer)
-
-                    if answer >= 1 and answer <= 4:
-                        break
+                        if answer >= 1 and answer <= 4:
+                            break
 
                 name = {
                     1: name,
