@@ -13,16 +13,17 @@ jobs:
       id: build-image
       uses: redhat-actions/buildah-build@v2
       with:
+        context: java
         image: images
         tags: java
         dockerfiles: |
-          ./java/Dockerfile
+          ./Dockerfile
 
     - name: Push To quay.io
       id: push-to-quay
       uses: redhat-actions/push-to-registry@v2
       with:
-        image: quay.io/wisp/images
+        image: images
         tags: java
         registry: quay.io/wisp
         username: ${{ secrets.REGISTRY_USERNAME }}
