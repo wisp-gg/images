@@ -4,6 +4,7 @@ import signal
 import struct
 import zipfile
 import hashlib
+import json
 
 def getFlag(name, default):
     search = "--%s=" % name
@@ -13,9 +14,13 @@ def getFlag(name, default):
 
     return default
 
-def getHeader(data, header):
+def getHeader(data, header, separator = ":"):
     for x in data.split("\n"):
-        key, value = x.strip().split(":")
+        splitted = x.strip().split(separator)
+        if len(splitted) != 2:
+            continue
+
+        key, value = splitted
         if key.lower() == header.lower():
             return value.strip()
 
@@ -35,9 +40,44 @@ def getJavaVersion(zip):
 
         return major_version, minor_version
 
-def getJavaName(zip):
-    major_version, minor_version = getJavaVersion(zip)
+def getVersionFromPaperclip(zip):
+    try:
+        with zip.open("patch.properties") as patch_properties:
+            return getHeader(patch_properties.read().decode(), "version", "=")
+    except:
+        pass
 
+    try:
+        with zip.open("patch.json") as patch_json:
+            patch_contents = patch_json.read().decode()
+            return json.loads(patch_contents)["version"]
+    except:
+        pass
+
+def getPaperRecommendedVersion(zip):
+    version = getVersionFromPaperclip(zip)
+    if not version:
+        return
+
+    major, minor, patch = map(int, version.split("."))
+    if major >= 1 and minor >= 16:
+        return "Java 16"
+    elif major >= 1 and minor >= 12:
+        return "Java 11"
+    elif major >= 1 and minor >= 8:
+        return "Java 8"
+
+def getJavaName(zip):
+    # If we're able to detect that the server uses paper (or fork of it), prefer their recommended versions over target.
+    try:
+        paper_recommended = getPaperRecommendedVersion(zip)
+        if paper_recommended:
+            return paper_recommended
+    except:
+        pass
+
+    # Otherwise, just fallback to checking which version of java the files were built with.
+    major_version, minor_version = getJavaVersion(zip)
     if major_version >= 60: # TODO: replace with java 17 when released?
         return "Java 16"
     elif major_version >= 55:
