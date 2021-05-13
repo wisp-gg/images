@@ -22,6 +22,6 @@ ENV USER=container HOME=/home/container
 
 WORKDIR /home/container
 
-COPY ./get_java_version.py /get_java_version.py
+COPY ./prompt.py /prompt.py
 COPY ./entrypoint.sh /entrypoint.sh
 CMD ["/bin/bash", "/entrypoint.sh"]
