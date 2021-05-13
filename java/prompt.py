@@ -201,7 +201,7 @@ def main():
                 print("This choice can be reset by deleting the '%s' file." % state_file)
             elif is_env:
                 print(replaceStartupWith(entrypointMappings[name]))
-    except err:
+    except:
         if is_echo:
             print("Couldn't detect jar version - defaulting to '%s'." % default)
         elif is_env:
