@@ -82,13 +82,17 @@ def getFileChecksum(path):
 
         return file_hash.digest()
 
-def getFileContents(path):
+def readFile(path):
     with open(path, "rb") as f:
         return f.read()
 
 def writeFile(path, data):
     with open(path, "wb") as f:
         f.write(data)
+
+def deleteFile(path):
+    if os.path.exists(path):
+        os.remove(path)
 
 mode = getFlag("mode", "echo")
 if mode not in ["echo", "env"]:
@@ -97,15 +101,6 @@ if mode not in ["echo", "env"]:
 is_echo = mode == "echo"
 is_env = mode == "env"
 
-jar = getJarFromStartup()
-if not jar:
-    if is_echo:
-        print("No jar detected in startup arguments - not enforcing java.")
-    elif is_env:
-        print(startup)
-
-    sys.exit(0)
-
 default = "Java 11"
 entrypointMappings = {
     "Java 8": "java8",
@@ -113,92 +108,103 @@ entrypointMappings = {
     "Java 16": "java16",
 }
 state_file = "disable_prompt_for_java_version"
-try:
-    checksum = getFileChecksum(jar)
+save_file = ".docker_overwrite"
+def main():
+    jar = getJarFromStartup()
+    if not jar:
+        if is_echo:
+            print("No jar detected in startup arguments - not enforcing java.")
+        elif is_env:
+            print(startup)
 
-    with zipfile.ZipFile(jar, "rw") as zip:
-        name = getJavaName(zip)
+        return
 
-        if not os.path.exists(state_file) or getFileContents(state_file) != checksum:
-            if not is_echo:
-                raise Exception("Something went really wrong - prompt should be displayed in echo mode but we're not using that mode???")
+    try:
+        checksum = getFileChecksum(jar)
 
-            print("Detected initial boot with this jar.")
-            initial = True
-            answer = ""
-            while True:
-                if initial:
-                    initial = False
-                    print("Which java version do you want to use?")
+        with zipfile.ZipFile(jar, "r") as zip:
+            name = getJavaName(zip)
+
+            if not os.path.exists(state_file) or readFile(state_file).strip() != checksum:
+                if not is_echo:
+                    raise Exception("Something went really wrong - prompt should be displayed in echo mode but we're not using that mode???")
+
+                print("Detected initial boot with this jar.")
+                initial = True
+                timedOut = False
+                answer = ""
+                while True:
+                    if initial:
+                        initial = False
+                        print("Which java version do you want to use?")
+                    else:
+                        print("Invalid option '%s' - the only valid options are the following:" % answer)
+
+                    print("1) Automatically detected version: '%s'" % name)
+                    print("2) Java 8")
+                    print("3) Java 11")
+                    print("4) Java 16")
+                    print("NOTE: this prompt will automatically expire in 30 seconds from inactivity and default to option 1) if nothing is chosen.")
+                    
+                    answer = inputWithTimeout(30)
+                    if answer is None:
+                        answer = "1"
+                        # timedOut = True # Technically, this should be set to true but we want to default to automatic always if possible
+
+                    if answer.endswith(")"):
+                        answer = answer[:-1]
+
+                    if answer.isdigit():
+                        answer = int(answer)
+
+                    if answer >= 1 and answer <= 4:
+                        break
+
+                name = {
+                    1: name,
+                    2: "Java 8",
+                    3: "Java 11",
+                    4: "Java 16",
+                }[answer]
+
+                if answer > 1:
+                    writeFile(save_file, name.encode())
                 else:
-                    print("Invalid option '%s' - the only valid options are the following:" % answer)
+                    deleteFile(save_file)
 
-                print("1) Automatically detected version: '%s'" % name)
-                print("2) Java 8")
-                print("3) Java 11")
-                print("4) Java 16")
-                print("NOTE: this prompt will automatically expire in 30 seconds from inactivity and default to option 1) if nothing is chosen.")
-                
-                answer = inputWithTimeout(30)
-                if answer is None:
-                    answer = "1"
+                if not timedOut:
+                    writeFile(state_file, checksum)
 
-                if answer.endswith(")"):
-                    answer = answer[:-1]
+            if os.path.exists(save_file):
+                name = readFile(save_file).decode().strip()
 
-                if answer.isdigit():
-                    answer = int(answer)
+                # users can overwrite the file - if they do and its not java* may as well just default to something else
+                if name not in entrypointMappings:
+                    if is_echo:
+                        print("Detected invalid java version '%s', defaulting back to '%s'..." % name % default)
+                        print("This choice can be reset by deleting the '%s' file." % state_file)
+                    elif is_env:
+                        print(replaceStartupWith(entrypointMappings[default]))
 
-                if answer >= 1 and answer <= 4:
-                    break
+                    return
 
-                print()
-
-            print()
-            print("You chose option %s." % answer)
-
-            if answer is not None:
-                writeFile(state_file, checksum)
-                print("This prompt can be re-enabled in the future by deleting the '%s' file." % state_file)
-
-            print()
-
-            name = {
-                1: name,
-                2: "Java 8",
-                3: "Java 11",
-                4: "Java 16",
-            }[answer]
-
-            if answer > 1:
-                zip.writestr(".docker_overwrite", name)
-
-        overwrite_file = zipfile.Path(zip, ".docker_overwrite")
-        if overwrite_file.exists():
-            entrypoint = overwrite_file.read_text().strip()
-            
-            # users can overwrite the file - if they do and its not java* may as well just default to something else
-            if entrypoint not in entrypointMappings:
                 if is_echo:
-                    print("Detected invalid java version '%s', defaulting back to '%s'..." % entrypoint % default)
+                    print("Detected java version being overwritten, using '%s'..." % name)
+                    print("This choice can be reset by deleting the '%s' file." % state_file)
                 elif is_env:
-                    print(replaceStartupWith(entrypointMappings[default]))
+                    print(replaceStartupWith(entrypointMappings[name]))
 
-                sys.exit(0)
+                return
 
             if is_echo:
-                print("Detected java version being overwritten, using '%s'..." % entrypoint)
+                print("Detected java version as '%s' automatically." % name)
+                print("This choice can be reset by deleting the '%s' file." % state_file)
             elif is_env:
-                print(replaceStartupWith(entrypointMappings[entrypoint]))
-
-            sys.exit(0)
-
+                print(replaceStartupWith(entrypointMappings[name]))
+    except err:
         if is_echo:
-            print("Detected java version as '%s' automatically." % entrypoint)
+            print("Couldn't detect jar version - defaulting to '%s'." % default)
         elif is_env:
-            print(replaceStartupWith(entrypointMappings[entrypoint]))
-except:
-    if is_echo:
-        print("Couldn't detect jar version - defaulting to '%s'." % default)
-    elif is_env:
-        print(replaceStartupWith(entrypointMappings[default]))
+            print(replaceStartupWith(entrypointMappings[default]))
+
+main()
