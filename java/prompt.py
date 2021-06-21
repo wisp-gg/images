@@ -26,19 +26,34 @@ def getHeader(data, header, separator = ":"):
 
     raise Exception("Couldn't find header " + header)
 
+def readClassHeader(zip, path):
+    with zip.open(path) as class_data:
+        header = class_data.read(4)
+        if header != b"\xca\xfe\xba\xbe":
+            raise Exception("Magic header of java class is not CAFEBABE?")
+
+        class_data.read(2) # minor_version, we don't care about this
+        major_version, = struct.unpack('>H', class_data.read(2))
+
+        return major_version
+
 def getJavaVersion(zip):
+    # Some jars are already pre-built and their build tools just merge the mojang jar into it,
+    # leading to some false positives. This tries to mitigate this by detecting the mojang jar inside.
+    # TODO: Though for some reason, some of them could be built with Java 8, others with e.g. Java 16???
+    max_version = 0
+    for x in zip.namelist():
+        if x.startswith("net/minecraft/") and x.endswith(".class"):
+            max_version = max(max_version, readClassHeader(zip, x))
+
+    if max_version != 0:
+        return max_version
+
+    # Otherwise, fall back to the main class
     manifest_data = zip.read("META-INF/MANIFEST.MF").decode()
     main_class_path = getHeader(manifest_data, "Main-Class")
 
-    with zip.open(main_class_path.replace(".", "/") + ".class") as main_class_data:
-        header = main_class_data.read(4)
-        if header != b"\xca\xfe\xba\xbe":
-            raise Exception("Magic header of main java class is not CAFEBABE?")
-
-        minor_version, = struct.unpack('>H', main_class_data.read(2))
-        major_version, = struct.unpack('>H', main_class_data.read(2))
-
-        return major_version, minor_version
+    return readClassHeader(zip, main_class_path.replace(".", "/") + ".class")
 
 def getVersionFromPaperclip(zip):
     try:
@@ -59,7 +74,8 @@ def getPaperRecommendedVersion(zip):
     if not version:
         return
 
-    major, minor, patch = map(int, version.split("."))
+    splitted = list(map(int, version.split(".")))
+    major, minor = [splitted[0], splitted[1]]
     if major >= 1 and minor >= 16:
         return "Java 16"
     elif major >= 1 and minor >= 12:
@@ -73,17 +89,20 @@ def getJavaName(zip):
         paper_recommended = getPaperRecommendedVersion(zip)
         if paper_recommended:
             return paper_recommended
-    except:
+    except Exception as e:
         pass
 
     # Otherwise, just fallback to checking which version of java the files were built with.
-    major_version, minor_version = getJavaVersion(zip)
-    if major_version >= 60: # TODO: replace with java 17 when released?
-        return "Java 16"
-    elif major_version >= 55:
-        return "Java 11"
-    else:
-        return "Java 8"
+    try:
+        major_version = getJavaVersion(zip)
+        if major_version >= 60:
+            return "Java 16"
+        elif major_version >= 55:
+            return "Java 11"
+        else:
+            return "Java 8"
+    except Exception as e:
+        pass
 
 startup = os.getenv("MODIFIED_STARTUP", os.getenv("STARTUP", ""))
 def getJarFromStartup():
@@ -164,6 +183,8 @@ def main():
 
         with zipfile.ZipFile(jar, "r") as zip:
             name = getJavaName(zip)
+            if not name:
+                name = default
 
             if not os.path.exists(state_file) or readFile(state_file) != checksum:
                 if not is_echo:
@@ -240,7 +261,7 @@ def main():
                 print("This choice can be reset by deleting the '%s' file." % state_file)
             elif is_env:
                 print(replaceStartupWith(entrypointMappings[name]))
-    except:
+    except Exception as e:
         if is_echo:
             print("Couldn't detect jar version - defaulting to '%s'." % default)
         elif is_env:
