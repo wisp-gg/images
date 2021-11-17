@@ -76,6 +76,8 @@ def getPaperRecommendedVersion(zip):
 
     splitted = list(map(int, version.split(".")))
     major, minor = [splitted[0], splitted[1]]
+    if major >= 1 and minor >= 17:
+        return "Java 17"
     if major >= 1 and minor >= 16:
         return "Java 16"
     elif major >= 1 and minor >= 12:
@@ -95,6 +97,8 @@ def getJavaName(zip):
     # Otherwise, just fallback to checking which version of java the files were built with.
     try:
         major_version = getJavaVersion(zip)
+        if major_version >= 61:
+            return "Java 17"
         if major_version >= 60:
             return "Java 16"
         elif major_version >= 55:
@@ -116,7 +120,7 @@ def replaceStartupWith(entrypoint):
     splitted[0] = entrypoint
 
     return " ".join(splitted)
-    
+
 def interrupt(signum, frame):
     raise Exception("")
 
@@ -165,6 +169,7 @@ entrypointMappings = {
     "Java 8": "java8",
     "Java 11": "java11",
     "Java 16": "java16",
+    "Java 17": "java17",
 }
 state_file = "disable_prompt_for_java_version"
 save_file = ".docker_overwrite"
@@ -205,8 +210,9 @@ def main():
                     print("2) Java 8")
                     print("3) Java 11")
                     print("4) Java 16")
+                    print("5) Java 17")
                     print("NOTE: this prompt will automatically expire in 30 seconds from inactivity and default to option 1) if nothing is chosen.")
-                    
+
                     answer = inputWithTimeout(30)
                     if answer is None:
                         answer = "1"
@@ -217,7 +223,7 @@ def main():
 
                     if answer.isdigit():
                         answer = int(answer)
-                        if answer >= 1 and answer <= 4:
+                        if answer >= 1 and answer <= 5:
                             break
 
                 name = {
@@ -225,6 +231,7 @@ def main():
                     2: "Java 8",
                     3: "Java 11",
                     4: "Java 16",
+                    5: "Java 17",
                 }[answer]
 
                 if answer > 1:
