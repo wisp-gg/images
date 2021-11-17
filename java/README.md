@@ -12,7 +12,7 @@ Currently, the following java versions are included:
 * Java 17
 
 Each time the image detects a new startup jar, the user will be prompted to choose the version the jar should be ran with:
-![example startup](https://owo.whats-th.is/25emTPo.png)
+![example startup](https://i.imgur.com/Uim0Ese.png)
 
 If the user doesn't select their version inside 30 seconds, it'll default to the automatically detected version. After the initial run, the prompt won't ask any questions from the user. If at any point the choice should be changed, the user can delete the `disable_prompt_for_java_version` file in the root of the server to retrigger the prompt and choose the new desired java version.
 
