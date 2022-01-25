@@ -11,11 +11,12 @@ RUN apt-get update -y && \
     add-apt-repository -y ppa:openjdk-r/ppa && \
     apt-get update -y && \
     apt-get install -y openjdk-8-jre openjdk-11-jre openjdk-16-jre openjdk-17-jre && \
-    rm -rf /var/lib/apt/lists/* && \
-    ln -s /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java /usr/local/bin/java8 && \
-    ln -s /usr/lib/jvm/java-11-openjdk-amd64/bin/java /usr/local/bin/java11 && \
-    ln -s /usr/lib/jvm/java-16-openjdk-amd64/bin/java /usr/local/bin/java16 && \
-    ln -s /usr/lib/jvm/java-17-openjdk-amd64/bin/java /usr/local/bin/java17 && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN ln -s /usr/lib/jvm/java-8-openjdk-$(dpkg --print-architecture)/jre/bin/java /usr/local/bin/java8 && \
+    ln -s /usr/lib/jvm/java-11-openjdk-$(dpkg --print-architecture)/bin/java /usr/local/bin/java11 && \
+    ln -s /usr/lib/jvm/java-16-openjdk-$(dpkg --print-architecture)/bin/java /usr/local/bin/java16 && \
+    ln -s /usr/lib/jvm/java-17-openjdk-$(dpkg --print-architecture)/bin/java /usr/local/bin/java17 && \
     useradd -d /home/container -m container
 
 USER container
