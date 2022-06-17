@@ -43,6 +43,7 @@ def getJavaVersion(zip):
     # TODO: Though for some reason, some of them could be built with Java 8, others with e.g. Java 16???
     max_version = 0
     for x in zip.namelist():
+        print(x)
         if (x.startswith("net/minecraft/") or x.startswith("io/")) and x.endswith(".class"):
             max_version = max(max_version, readClassHeader(zip, x))
 
@@ -190,6 +191,11 @@ def main():
             print(startup)
 
         return
+
+    # TODO: quilt's startup jars have nothing in them and is handled instead by MANIFEST.MF pointing to libraries - we'd need more advanced logic for this
+    # but for now just assume server.jar will exist.
+    if jar == "quilt-server-launch.jar":
+        jar = "server.jar"
 
     try:
         checksum = getFileChecksum(jar)
