@@ -43,7 +43,6 @@ def getJavaVersion(zip):
     # TODO: Though for some reason, some of them could be built with Java 8, others with e.g. Java 16???
     max_version = 0
     for x in zip.namelist():
-        print(x)
         if (x.startswith("net/minecraft/") or x.startswith("io/")) and x.endswith(".class"):
             max_version = max(max_version, readClassHeader(zip, x))
 
