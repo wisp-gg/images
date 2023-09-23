@@ -84,6 +84,8 @@ def getPaperRecommendedVersion(zip):
 
     splitted = list(map(int, version.split(".")))
     major, minor = [splitted[0], splitted[1]]
+    if major >= 1 and minor >= 21:
+        return "Java 21"
     if major >= 1 and minor >= 17:
         return "Java 17"
     if major >= 1 and minor >= 16:
@@ -105,6 +107,8 @@ def getJavaName(zip):
     # Otherwise, just fallback to checking which version of java the files were built with.
     try:
         major_version = getJavaVersion(zip)
+        if major_version >= 65:
+            return "Java 21"
         if major_version >= 61:
             return "Java 17"
         if major_version >= 60:
@@ -178,6 +182,7 @@ entrypointMappings = {
     "Java 11": "java11",
     "Java 16": "java16",
     "Java 17": "java17",
+    "Java 21": "java21",
 }
 state_file = "disable_prompt_for_java_version"
 save_file = ".docker_overwrite"
@@ -224,6 +229,7 @@ def main():
                     print("3) Java 11")
                     print("4) Java 16")
                     print("5) Java 17")
+                    print("6) Java 21")
                     print("NOTE: this prompt will automatically expire in 30 seconds from inactivity and default to option 1) if nothing is chosen.")
 
                     answer = inputWithTimeout(30)
@@ -245,6 +251,7 @@ def main():
                     3: "Java 11",
                     4: "Java 16",
                     5: "Java 17",
+                    6: "Java 21",
                 }[answer]
 
                 if answer > 1:
