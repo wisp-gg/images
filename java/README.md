@@ -10,6 +10,7 @@ Currently, the following java versions are included:
 * Java 11
 * Java 16
 * Java 17
+* Java 21
 
 Each time the image detects a new startup jar, the user will be prompted to choose the version the jar should be ran with:
 ![example startup](https://i.imgur.com/Uim0Ese.png)
