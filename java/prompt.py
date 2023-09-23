@@ -242,7 +242,7 @@ def main():
 
                     if answer.isdigit():
                         answer = int(answer)
-                        if answer >= 1 and answer <= 5:
+                        if answer >= 1 and answer <= 6:
                             break
 
                 name = {
