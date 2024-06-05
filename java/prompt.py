@@ -84,7 +84,7 @@ def getPaperRecommendedVersion(zip):
 
     splitted = list(map(int, version.split(".")))
     major, minor = [splitted[0], splitted[1]]
-    if major >= 1 and minor >= 21:
+    if major >= 1 and minor >= 20:
         return "Java 21"
     if major >= 1 and minor >= 17:
         return "Java 17"
