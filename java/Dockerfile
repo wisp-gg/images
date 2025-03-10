@@ -17,6 +17,7 @@ RUN ln -s /usr/lib/jvm/java-8-openjdk-$(dpkg --print-architecture)/jre/bin/java 
     ln -s /usr/lib/jvm/java-11-openjdk-$(dpkg --print-architecture)/bin/java /usr/local/bin/java11 && \
     ln -s /usr/lib/jvm/java-16-openjdk-$(dpkg --print-architecture)/bin/java /usr/local/bin/java16 && \
     ln -s /usr/lib/jvm/java-17-openjdk-$(dpkg --print-architecture)/bin/java /usr/local/bin/java17 && \
+    ln -s /usr/lib/jvm/java-19-openjdk-$(dpkg --print-architecture)/bin/java /usr/local/bin/java19 && \
     ln -s /usr/lib/jvm/java-21-openjdk-$(dpkg --print-architecture)/bin/java /usr/local/bin/java21 && \
     useradd -d /home/container -m container
 
