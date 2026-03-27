@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:24.04
 
 LABEL author="Stepan Fedotov <stepan@wisp.gg>" maintainer="William Venner <william.venner@infraly.co>"
 ARG DEBIAN_FRONTEND=noninteractive
