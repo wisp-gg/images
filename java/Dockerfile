@@ -5,7 +5,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 
 RUN apt-get update -y && \
-    apt-get install -y tzdata curl wget ca-certificates software-properties-common apt-transport-https fontconfig locales openssl git tar sqlite iproute2 python3 && \
+    apt-get install -y tzdata curl wget ca-certificates software-properties-common apt-transport-https fontconfig locales openssl git tar sqlite3iproute2 python3 && \
     echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
     locale-gen en_US.UTF-8 && \
     add-apt-repository -y ppa:openjdk-r/ppa && \
