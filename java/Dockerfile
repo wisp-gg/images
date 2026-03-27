@@ -10,14 +10,28 @@ RUN apt-get update -y && \
     locale-gen en_US.UTF-8 && \
     add-apt-repository -y ppa:openjdk-r/ppa && \
     apt-get update -y && \
-    apt-get install -y openjdk-8-jre openjdk-11-jre openjdk-16-jre openjdk-17-jre openjdk-21-jdk openjdk-25-jdk && \
+    apt-get install -y openjdk-11-jre openjdk-17-jre openjdk-21-jdk openjdk-25-jdk && \
     rm -rf /var/lib/apt/lists/*
 
-RUN ln -s /usr/lib/jvm/java-8-openjdk-$(dpkg --print-architecture)/jre/bin/java /usr/local/bin/java8 && \
+# Install Java 8, 16, 19 from Adoptium (not available in Ubuntu 24.04 repos)
+RUN ARCH=$(dpkg --print-architecture) && \
+    if [ "$ARCH" = "amd64" ]; then ADOPT_ARCH="x64"; else ADOPT_ARCH="aarch64"; fi && \
+    curl -sL "https://api.adoptium.net/v3/binary/latest/8/ga/linux/${ADOPT_ARCH}/jre/hotspot/normal/eclipse" -o /tmp/java8.tar.gz && \
+    mkdir -p /usr/lib/jvm/temurin-8 && \
+    tar -xzf /tmp/java8.tar.gz -C /usr/lib/jvm/temurin-8 --strip-components=1 && \
+    curl -sL "https://api.adoptium.net/v3/binary/latest/16/ga/linux/${ADOPT_ARCH}/jdk/hotspot/normal/eclipse" -o /tmp/java16.tar.gz && \
+    mkdir -p /usr/lib/jvm/temurin-16 && \
+    tar -xzf /tmp/java16.tar.gz -C /usr/lib/jvm/temurin-16 --strip-components=1 && \
+    curl -sL "https://api.adoptium.net/v3/binary/latest/19/ga/linux/${ADOPT_ARCH}/jdk/hotspot/normal/eclipse" -o /tmp/java19.tar.gz && \
+    mkdir -p /usr/lib/jvm/temurin-19 && \
+    tar -xzf /tmp/java19.tar.gz -C /usr/lib/jvm/temurin-19 --strip-components=1 && \
+    rm -f /tmp/java*.tar.gz
+
+RUN ln -s /usr/lib/jvm/temurin-8/bin/java /usr/local/bin/java8 && \
     ln -s /usr/lib/jvm/java-11-openjdk-$(dpkg --print-architecture)/bin/java /usr/local/bin/java11 && \
-    ln -s /usr/lib/jvm/java-16-openjdk-$(dpkg --print-architecture)/bin/java /usr/local/bin/java16 && \
+    ln -s /usr/lib/jvm/temurin-16/bin/java /usr/local/bin/java16 && \
     ln -s /usr/lib/jvm/java-17-openjdk-$(dpkg --print-architecture)/bin/java /usr/local/bin/java17 && \
-    ln -s /usr/lib/jvm/java-19-openjdk-$(dpkg --print-architecture)/bin/java /usr/local/bin/java19 && \
+    ln -s /usr/lib/jvm/temurin-19/bin/java /usr/local/bin/java19 && \
     ln -s /usr/lib/jvm/java-21-openjdk-$(dpkg --print-architecture)/bin/java /usr/local/bin/java21 && \
     ln -s /usr/lib/jvm/java-25-openjdk-$(dpkg --print-architecture)/bin/java /usr/local/bin/java25 && \
     useradd -d /home/container -m container
