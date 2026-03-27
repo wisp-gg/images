@@ -10,7 +10,7 @@ RUN apt-get update -y && \
     locale-gen en_US.UTF-8 && \
     add-apt-repository -y ppa:openjdk-r/ppa && \
     apt-get update -y && \
-    apt-get install -y openjdk-8-jre openjdk-11-jre openjdk-16-jre openjdk-17-jre openjdk-21-jdk && \
+    apt-get install -y openjdk-8-jre openjdk-11-jre openjdk-16-jre openjdk-17-jre openjdk-21-jdk openjdk-25-jdk && \
     rm -rf /var/lib/apt/lists/*
 
 RUN ln -s /usr/lib/jvm/java-8-openjdk-$(dpkg --print-architecture)/jre/bin/java /usr/local/bin/java8 && \
@@ -19,6 +19,7 @@ RUN ln -s /usr/lib/jvm/java-8-openjdk-$(dpkg --print-architecture)/jre/bin/java 
     ln -s /usr/lib/jvm/java-17-openjdk-$(dpkg --print-architecture)/bin/java /usr/local/bin/java17 && \
     ln -s /usr/lib/jvm/java-19-openjdk-$(dpkg --print-architecture)/bin/java /usr/local/bin/java19 && \
     ln -s /usr/lib/jvm/java-21-openjdk-$(dpkg --print-architecture)/bin/java /usr/local/bin/java21 && \
+    ln -s /usr/lib/jvm/java-25-openjdk-$(dpkg --print-architecture)/bin/java /usr/local/bin/java25 && \
     useradd -d /home/container -m container
 
 USER container

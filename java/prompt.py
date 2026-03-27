@@ -107,6 +107,8 @@ def getJavaName(zip):
     # Otherwise, just fallback to checking which version of java the files were built with.
     try:
         major_version = getJavaVersion(zip)
+        if major_version >= 69:
+            return "Java 25"
         if major_version >= 65:
             return "Java 21"
         if major_version >= 61:
@@ -183,6 +185,7 @@ entrypointMappings = {
     "Java 16": "java16",
     "Java 17": "java17",
     "Java 21": "java21",
+    "Java 25": "java25",
 }
 state_file = "disable_prompt_for_java_version"
 save_file = ".docker_overwrite"
@@ -230,6 +233,7 @@ def main():
                     print("4) Java 16")
                     print("5) Java 17")
                     print("6) Java 21")
+                    print("7) Java 25")
                     print("NOTE: this prompt will automatically expire in 30 seconds from inactivity and default to option 1) if nothing is chosen.")
 
                     answer = inputWithTimeout(30)
@@ -242,7 +246,7 @@ def main():
 
                     if answer.isdigit():
                         answer = int(answer)
-                        if answer >= 1 and answer <= 6:
+                        if answer >= 1 and answer <= 7:
                             break
 
                 name = {
@@ -252,6 +256,7 @@ def main():
                     4: "Java 16",
                     5: "Java 17",
                     6: "Java 21",
+                    7: "Java 25",
                 }[answer]
 
                 if answer > 1:
