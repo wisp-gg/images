@@ -3,6 +3,8 @@ FROM ubuntu:24.04
 LABEL author="Stepan Fedotov <stepan@wisp.gg>" maintainer="William Venner <william.venner@infraly.co>"
 ARG DEBIAN_FRONTEND=noninteractive
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
+# Change this to rebuild past the build cache and pull the latest JDK security updates.
+ARG JDK_UPDATES=2026-11-19
 
 RUN apt-get update -y && \
     apt-get install -y tzdata curl wget ca-certificates software-properties-common apt-transport-https fontconfig locales openssl git tar sqlite3 iproute2 python3 && \
